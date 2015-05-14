@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
         graficoView = new GraphSurfaceView(this);
         RelativeLayout layout = new RelativeLayout(this);
 
-        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(600, 550);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(400, 350);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         layout.addView(graficoView, layoutParams);
 

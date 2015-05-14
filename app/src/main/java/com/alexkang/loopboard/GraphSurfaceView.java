@@ -14,6 +14,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -21,7 +25,8 @@ import android.view.SurfaceView;
 import android.view.View;
 
 
-public class GraphSurfaceView extends View {
+public class GraphSurfaceView extends View implements SensorEventListener {
+
 	private static final String TAG = GraphSurfaceView.class.getSimpleName();
 	
 	protected byte[] mSampleData;
@@ -32,6 +37,14 @@ public class GraphSurfaceView extends View {
 	protected Bitmap mBitmap;
 	protected Paint mPaint;
 	protected Map<Float, List<Integer>> mData;
+
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private long lastUpdate = 0;
+    private float x, y, z;
+    private final int SENSOR_TIME = 1000;
+    private final int BACKGROUND_COLOR = Color.BLACK;
+
 
 	public GraphSurfaceView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -48,9 +61,12 @@ public class GraphSurfaceView extends View {
 	
 	protected void init(Context ctx) {
 		mPaint = new Paint();
-		mPaint.setColor(Color.WHITE);
 		mBitmap = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_launcher);
 		mData = new TreeMap<Float, List<Integer>>();
+
+        sensorManager = (SensorManager) ctx.getSystemService(ctx.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(this, accelerometer, sensorManager.SENSOR_DELAY_NORMAL);
 	}
 
 	public void setData(byte[] data, int sampleSize, float sampleLength) {
@@ -59,11 +75,14 @@ public class GraphSurfaceView extends View {
 		this.mSampleLength = sampleLength;
 		this.mTimePerSlot = this.mSampleLength / this.mSampleSize;
 		invalidate();
+
+
+        mPaint.setColor(this.getRGBfromXYZ());
 	}
 	
 	@Override
 	protected void onDraw(Canvas canvas) {
-		canvas.drawColor(Color.RED);
+		canvas.drawColor(BACKGROUND_COLOR);
 		mData.clear();
 		
 		if (mSampleData != null) {
@@ -153,4 +172,40 @@ public class GraphSurfaceView extends View {
 			list.add(amplitude);
 		}
 	}
+
+    private int getRGBfromXYZ() {
+        int R = Math.round(255 * this.x);
+        int G = Math.round(255 * this.y);
+        int B = Math.round(255 * this.z);
+
+        R = (R << 16) & 0x00FF0000; //Shift red 16-bits and mask out other stuff
+        G = (G << 8) & 0x0000FF00; //Shift Green 8-bits and mask out other stuff
+        B = B & 0x000000FF; //Mask out anything not blue.
+
+        return 0xFF000000 | R | G | B; //0xFF000000 for 100% Alpha. Bitwise OR everything together.
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        Sensor sensor = event.sensor;
+
+        if(sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+
+            long curTime = System.currentTimeMillis();
+
+            if ((curTime - lastUpdate) > SENSOR_TIME) {
+                lastUpdate = curTime;
+
+                x = event.values[0];
+                y = event.values[1];
+                z = event.values[2];
+            }
+
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
 }
