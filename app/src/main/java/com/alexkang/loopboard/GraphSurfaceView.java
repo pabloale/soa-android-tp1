@@ -41,8 +41,12 @@ public class GraphSurfaceView extends View implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private long lastUpdate = 0;
-    private float x, y, z;
-    private final int SENSOR_TIME = 1000;
+    private boolean initialized = false;
+    private float x, y, z, xLast, yLast, zLast;
+    private float[] gravity = {0,0,0};
+    private final float FILTER_GRAVITY = 0.8f;
+    private final float FILTER_NOISE = 0.5f;
+    private final int SENSOR_TIME = 500;
     private final int BACKGROUND_COLOR = Color.BLACK;
 
 
@@ -187,6 +191,7 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+
         Sensor sensor = event.sensor;
 
         if(sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -196,11 +201,36 @@ public class GraphSurfaceView extends View implements SensorEventListener {
             if ((curTime - lastUpdate) > SENSOR_TIME) {
                 lastUpdate = curTime;
 
-                x = event.values[0];
-                y = event.values[1];
-                z = event.values[2];
-            }
+                gravity[0] = FILTER_GRAVITY * gravity[0] + (1 - FILTER_GRAVITY) * event.values[0];
+                gravity[1] = FILTER_GRAVITY * gravity[1] + (1 - FILTER_GRAVITY) * event.values[1];
+                gravity[2] = FILTER_GRAVITY * gravity[2] + (1 - FILTER_GRAVITY) * event.values[2];
 
+                x = event.values[0] - gravity[0];
+                y = event.values[1] - gravity[1];
+                z = event.values[2] - gravity[2];
+
+                if (!initialized) {
+                    xLast = x;
+                    yLast = y;
+                    zLast = z;
+                    initialized = true;
+                } else {
+                    float deltaX = Math.abs(xLast - x);
+                    float deltaY = Math.abs(yLast - y);
+                    float deltaZ = Math.abs(zLast - z);
+
+                    if (deltaX < FILTER_NOISE)
+                        x = xLast;
+                    if (deltaY < FILTER_NOISE)
+                        y = yLast;
+                    if (deltaZ < FILTER_NOISE)
+                        z = zLast;
+
+                    xLast = x;
+                    yLast = y;
+                    zLast = z;
+                }
+            }
         }
     }
 
