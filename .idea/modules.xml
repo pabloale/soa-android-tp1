@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/loop-board.iml" filepath="$PROJECT_DIR$/loop-board.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loopboard-master.iml" filepath="$PROJECT_DIR$/loopboard-master.iml" />
     </modules>
   </component>
 </project>

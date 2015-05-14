@@ -4,22 +4,27 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.PixelFormat;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -47,10 +52,19 @@ public class MainActivity extends Activity {
     private int numImported;
     private boolean isRecording = false;
 
+
+
+    public static final float PCM_MAXIMUM_VALUE = 32768.0f;			// 16-bit signed = 32768
+    private GraphSurfaceView graficoView;
+    SurfaceHolder surface_holder = null;
+    private boolean debeGravar = true;
+
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
         mMinBuffer = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
 
@@ -75,7 +89,7 @@ public class MainActivity extends Activity {
 			public boolean onTouch(View view, MotionEvent motionEvent) {
 				int action = motionEvent.getAction();
 				
-				if (action == MotionEvent.ACTION_DOWN) {
+				if (action == MotionEvent.ACTION_DOWN && debeGravar) {
                     view.setPressed(true);
 
                     if (((System.nanoTime() - lastKnownTime) / 1e6) < 250) {
@@ -86,9 +100,13 @@ public class MainActivity extends Activity {
                     lastKnownTime = System.nanoTime();
                     startRecording(mSamples.size());
 				}
-				else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    view.setPressed(false);
-                    stopRecording();
+				else if ((action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL)) {
+                    if (!debeGravar) {
+                        view.setPressed(false);
+                        stopRecording();
+                    }
+
+                    debeGravar = !debeGravar;
 				}
 				
 				return true;
@@ -101,6 +119,16 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "Press and hold the record button to create a sample!", Toast.LENGTH_SHORT).show();
             sharedPref.edit().putBoolean("first_use", false).apply();
         }
+
+        getWindow().setFormat(PixelFormat.TRANSLUCENT);
+        graficoView = new GraphSurfaceView(this);
+        RelativeLayout layout = new RelativeLayout(this);
+
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(600, 550);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        layout.addView(graficoView, layoutParams);
+
+        addContentView(layout, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
 	}
 
 	@Override
@@ -266,6 +294,14 @@ public class MainActivity extends Activity {
         Toast.makeText(this, "All recordings deleted", Toast.LENGTH_SHORT).show();
 	}
 
+    private void update(final byte[] bytes, final int length, final float sampleLength) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                graficoView.setData(bytes, length, sampleLength);
+            }
+        });
+    }
+
     private class RecordingThread extends Thread {
 
         private int index;
@@ -288,7 +324,11 @@ public class MainActivity extends Activity {
             }
 
             while (isRecording) {
-                mRecorder.read(buffer, 0, mMinBuffer);
+                int count = mRecorder.read(buffer, 0, mMinBuffer);
+
+                float sampleLength = 1.0f / ((float)SAMPLE_RATE / (float)count);
+                update(buffer, count, sampleLength);
+
                 output.write(buffer, 0, mMinBuffer);
             }
 
@@ -396,5 +436,5 @@ public class MainActivity extends Activity {
         }
 
     }
-	
+
 }
