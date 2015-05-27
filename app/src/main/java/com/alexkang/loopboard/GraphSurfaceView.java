@@ -26,17 +26,13 @@ import android.view.View;
 
 
 public class GraphSurfaceView extends View implements SensorEventListener {
-
-	private static final String TAG = GraphSurfaceView.class.getSimpleName();
 	
 	protected byte[] mSampleData;
 	protected int mSampleSize;
 	protected float mSampleLength;
-	protected float mTimePerSlot;
 	
 	protected Bitmap mBitmap;
 	protected Paint mPaint;
-	protected Map<Float, List<Integer>> mData;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -66,7 +62,6 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 	protected void init(Context ctx) {
 		mPaint = new Paint();
 		mBitmap = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_launcher);
-		mData = new TreeMap<Float, List<Integer>>();
 
         sensorManager = (SensorManager) ctx.getSystemService(ctx.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -77,7 +72,6 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 		this.mSampleData = data;
 		this.mSampleSize = sampleSize;
 		this.mSampleLength = sampleLength;
-		this.mTimePerSlot = this.mSampleLength / this.mSampleSize;
 		invalidate();
 
 
@@ -87,7 +81,6 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		canvas.drawColor(BACKGROUND_COLOR);
-		mData.clear();
 		
 		if (mSampleData != null) {
 			int numPoints = canvas.getWidth();
@@ -97,84 +90,23 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 			float[] points = new float[numPoints * 4];		// a line = 4 points: x0,y0,x1,y1
 			float oldX = 0.0f;
 			float oldY = halfHeight;
-			int pointAboveZero = -1;
 			
 			for (int i = 0; i < numPoints; i ++) {
 				byte val = mSampleData[i*step];
-				float y = (((float)val / MainActivity.PCM_MAXIMUM_VALUE) * halfHeight) + halfHeight;
+				float y = ((float)val / (canvas.getHeight() / 80)) + halfHeight;
 				points[i*4+0] = oldX;
 				points[i*4+1] = oldY;
 				
 				points[i*4+2] = i;
 				points[i*4+3] = y;
-				
-				oldX = i;
-				oldY = y;
+
+                oldX = i;
+                oldY = y;
 			}
 			canvas.drawLines(points, mPaint);
 
-			for (int i = 0; i < mSampleSize; i ++) {
-				byte val = mSampleData[i];
-				if (val > 0) {
-					if (pointAboveZero < 0) {
-						pointAboveZero = i;
-					}
-				} else if (val < 0) {
-					if (pointAboveZero > 0) {
-						int wavelength = i - pointAboveZero;
-						if (wavelength > 3) {
-							// wavelengths less than 3 should be considered "too high" 
-							float freq = (1.0f / ((float)wavelength * 2.0f * this.mTimePerSlot));		// this is realy only half a wavelength, so just assume...
-							int amplitude = (mSampleData[(i + pointAboveZero) / 2]);
-							if (freq > 0.0f && freq < 5000.0f) {
-								addData(freq, amplitude);
-							}
-						}
-						pointAboveZero = -1;
-					}
-				}
-				
-			}
 		}
-		
-		printMap();
-	}
-	
-	private void printMap() {
-		if (mData.size() > 0) {
-			Float freq = 0.0f;
-			List<Integer> amps = new ArrayList<Integer>();
-			Iterator<Float> iter = mData.keySet().iterator();
-			while (iter.hasNext()) {
-				Float key = iter.next();
-				List<Integer> values = mData.get(key);
-				if (values.size() > amps.size()) {
-					freq = key;
-					amps = values;
-				}
-			}
 
-			Iterator<Integer> i = amps.iterator();
-			Integer bestAmp = 0;
-			while (i.hasNext()) {
-				Integer amp = i.next();
-				if (amp > bestAmp) {
-					bestAmp = amp;
-				}
-			}
-			Log.d(TAG, "Frequency: " + freq + ", amplitude: " + bestAmp);
-		}
-	}
-	
-	private void addData(float frequency, int amplitude) {
-		if (!mData.containsKey(frequency)) {
-			List<Integer> list = new ArrayList<Integer>();
-			list.add(amplitude);
-			mData.put(frequency, list);
-		} else {
-			List<Integer> list = mData.get(frequency);
-			list.add(amplitude);
-		}
 	}
 
     private int getRGBfromXYZ() {

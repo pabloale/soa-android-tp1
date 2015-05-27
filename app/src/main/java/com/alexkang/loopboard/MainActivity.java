@@ -3,6 +3,7 @@ package com.alexkang.loopboard;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.media.AudioFormat;
@@ -25,6 +26,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -54,7 +56,8 @@ public class MainActivity extends Activity {
 
 
 
-    public static final float PCM_MAXIMUM_VALUE = 32768.0f;			// 16-bit signed = 32768
+    public static final int RESULT_SETTINGS = 1;
+    public static final float PCM_MAXIMUM_VALUE = 128.0f;			// 8-bit signed = 128
     private GraphSurfaceView graficoView;
     SurfaceHolder surface_holder = null;
     private boolean debeGravar = true;
@@ -124,17 +127,19 @@ public class MainActivity extends Activity {
         graficoView = new GraphSurfaceView(this);
         RelativeLayout layout = new RelativeLayout(this);
 
-        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(400, 350);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(540, 400);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         layout.addView(graficoView, layoutParams);
 
         addContentView(layout, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.settings, menu);
 		return true;
 	}
 	
@@ -147,6 +152,10 @@ public class MainActivity extends Activity {
 			case R.id.action_stop: // Stops all looped play backs.
                 stopAll();
 				return true;
+            case R.id.menu_settings:
+                Intent i = new Intent(this, UserSettingActivity.class);
+                //startActivity(i);
+                return true;
 			default:
 				return true;
 		}
@@ -326,8 +335,10 @@ public class MainActivity extends Activity {
             while (isRecording) {
                 int count = mRecorder.read(buffer, 0, mMinBuffer);
 
-                float sampleLength = 1.0f / ((float)SAMPLE_RATE / (float)count);
-                update(buffer, count, sampleLength);
+                synchronized (buffer) {
+                    float sampleLength = 1.0f / ((float)SAMPLE_RATE / (float)count);
+                    update(buffer, count, sampleLength);
+                }
 
                 output.write(buffer, 0, mMinBuffer);
             }
