@@ -8,16 +8,13 @@
 
 
 
-    <string name="menu_settings">Settings</string>
+    <string name="menu_settings">Opciones</string>
 
-    <string name="pref_send_report">Send crash reports</string>
-    <string name="pref_send_report_summary">Helps to fix bugs</string>
-    <string name="pref_sync_frequency">Sync frequency</string>
-    <string name="pref_sync_frequency_summary">Set the sync frequency</string>
-    <string name="pref_user_name">Set username</string>
-    <string name="pref_user_name_summary">Set your username</string>
+    <string name="pref_back_color">Color de fondo</string>
+    <string name="pref_back_color_summary">Eliga el color del fondo del grafico</string>
+    <string name="pref_refresh_time">Tiempo de refresco (milisegundos)</string>
+    <string name="pref_refresh_time_summary">Tipee el tiempo de refresco para el cambio de color (en milisegundos)</string>
 
-    <string name="pref_user_profile">User Profile</string>
-    <string name="pref_update_setting">Update Settings</string>
+    <string name="pref_category_graph_options">Opciones del gráfico</string>
 
 </resources>

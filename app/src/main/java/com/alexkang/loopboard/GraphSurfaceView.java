@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import com.alexkang.loopboard.R;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -18,6 +19,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -34,6 +36,7 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 	protected Bitmap mBitmap;
 	protected Paint mPaint;
 
+    private SharedPreferences prefs;
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private long lastUpdate = 0;
@@ -42,8 +45,8 @@ public class GraphSurfaceView extends View implements SensorEventListener {
     private float[] gravity = {0,0,0};
     private final float FILTER_GRAVITY = 0.8f;
     private final float FILTER_NOISE = 0.5f;
-    private final int SENSOR_TIME = 500;
-    private final int BACKGROUND_COLOR = Color.BLACK;
+    private int SENSOR_TIME = 500;
+    private int BACKGROUND_COLOR = Color.BLACK;
 
 
 	public GraphSurfaceView(Context context, AttributeSet attrs, int defStyle) {
@@ -63,6 +66,8 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 		mPaint = new Paint();
 		mBitmap = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_launcher);
 
+        prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+
         sensorManager = (SensorManager) ctx.getSystemService(ctx.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, accelerometer, sensorManager.SENSOR_DELAY_NORMAL);
@@ -80,6 +85,7 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 	
 	@Override
 	protected void onDraw(Canvas canvas) {
+        this.getPreferences();
 		canvas.drawColor(BACKGROUND_COLOR);
 		
 		if (mSampleData != null) {
@@ -111,6 +117,11 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 		}
 
 	}
+
+    private void getPreferences() {
+        BACKGROUND_COLOR = Color.parseColor(prefs.getString("prefColor","BLACK"));
+        SENSOR_TIME = Integer.parseInt(prefs.getString("prefRefreshTime","500"));
+    }
 
     private int getRGBfromXYZ() {
         int R = Math.round(255 * this.x);

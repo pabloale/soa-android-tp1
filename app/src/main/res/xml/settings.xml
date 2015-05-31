@@ -1,27 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <PreferenceCategory android:title="@string/pref_user_profile" >
+    <PreferenceCategory android:title="@string/pref_category_graph_options" >
         <EditTextPreference
-            android:title="@string/pref_user_name"
-            android:summary="@string/pref_user_name_summary"
-            android:key="prefUsername"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/pref_update_setting" >
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="prefSendReport"
-            android:summary="@string/pref_send_report_summary"
-            android:title="@string/pref_send_report" >
-        </CheckBoxPreference>
+            android:key="prefRefreshTime"
+            android:inputType="number"
+            android:title="@string/pref_refresh_time"
+            android:summary="@string/pref_refresh_time_summary" />
 
         <ListPreference
-            android:key="prefSyncFrequency"
-            android:entries="@array/syncFrequency"
-            android:summary="@string/pref_sync_frequency_summary"
-            android:entryValues="@array/syncFrequencyValues"
-            android:title="@string/pref_sync_frequency" />
+            android:key="prefColor"
+            android:title="@string/pref_back_color"
+            android:summary="@string/pref_back_color_summary"
+            android:entries="@array/colors"
+            android:entryValues="@array/colorsValues" />
     </PreferenceCategory>
 
 </PreferenceScreen>

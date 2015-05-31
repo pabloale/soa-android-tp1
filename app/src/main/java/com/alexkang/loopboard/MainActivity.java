@@ -154,8 +154,7 @@ public class MainActivity extends Activity {
 				return true;
             case R.id.menu_settings:
                 Intent i = new Intent(this, UserSettingActivity.class);
-                //TODO
-                //startActivity(i);
+                startActivity(i);
                 return true;
 			default:
 				return true;
