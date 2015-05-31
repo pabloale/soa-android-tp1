@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
         graficoView = new GraphSurfaceView(this);
         RelativeLayout layout = new RelativeLayout(this);
 
-        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(540, 400);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(500, 400);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         layout.addView(graficoView, layoutParams);
 
@@ -154,6 +154,7 @@ public class MainActivity extends Activity {
 				return true;
             case R.id.menu_settings:
                 Intent i = new Intent(this, UserSettingActivity.class);
+                //TODO
                 //startActivity(i);
                 return true;
 			default:

@@ -91,13 +91,16 @@ public class GraphSurfaceView extends View implements SensorEventListener {
 			float oldX = 0.0f;
 			float oldY = halfHeight;
 			
-			for (int i = 0; i < numPoints; i ++) {
-				byte val = mSampleData[i*step];
-				float y = ((float)val / (canvas.getHeight() / 80)) + halfHeight;
+			for (int i = 0; i < numPoints; i++) {
+				byte valHi = mSampleData[i*step];
+                byte valLow = mSampleData[i*step+1];
+                short val = (short)(valHi + Byte.MAX_VALUE * valLow);
+
+				float y = (((float)val / Short.MAX_VALUE) * halfHeight) + halfHeight;
 				points[i*4+0] = oldX;
 				points[i*4+1] = oldY;
 				
-				points[i*4+2] = i;
+				points[i*4+2] = i+1;
 				points[i*4+3] = y;
 
                 oldX = i;
